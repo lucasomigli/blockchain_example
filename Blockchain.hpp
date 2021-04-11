@@ -1,12 +1,13 @@
-#ifndef BLOCKCHAIN.HPP
+#ifndef BLOCKCHAIN_HPP
+#define BLOCKCHAIN_HPP
 
-#include <common.hpp>
-#include <Block.hpp>
+#include "common.hpp"
+#include "Block.hpp"
 
 class Blockchain
 {
 private:
-    std::vector<std::unique_ptr<Block>> blockchain;
+    std::vector<std::shared_ptr<Block>> blockchain;
 
 public:
     Blockchain(const int &val);
@@ -24,14 +25,14 @@ public:
     void deleteBlockID(int id);
     void deleteBlockAt(int index);
 
-    int printBlockChain() const;
-    int printBlockChain(int index) const;
+    void printBlockChain() const;
+    void printBlockChain(int index) const;
 };
 
 Blockchain::Blockchain(const int &val)
 {
     Block *genesis;
-    std::unique_ptr<Block> p(genesis);
+    std::shared_ptr<Block> p(genesis);
     blockchain.push_back(p);
 };
 
@@ -49,7 +50,7 @@ int Blockchain::getLatestBlockValue() const
 
 Block Blockchain::getLatestBlock() const
 {
-    return (blockchain[getSize() - 1]);
+    return *(blockchain[getSize() - 1]);
 };
 
 Block Blockchain::getBlockAt(int id) const
@@ -66,16 +67,19 @@ Block Blockchain::getBlockAt(int id) const
 
 void Blockchain::pushBlock(Block &block)
 {
-    Block *latest = &(getLatestBlock());
-    latest->setNextBlock(block);
+    Block latest = getLatestBlock();
+    block.setPreviousBlock(latest);
+    latest.setNextBlock(block);
 }
 void Blockchain::insertBlock(Block &block, int index)
 {
     try
     {
-        Block block = (blockchain[index]->getNextBlock());
-        *(blockchain[index])->setNextBlock(block);
-        block.setNextBlock(*tmp);
+        Block tmp = (blockchain[index]->getNextBlock());
+        blockchain[index]->setNextBlock(block);
+        tmp.setPreviousBlock(block);
+        block.setNextBlock(tmp);
+        block.setPreviousBlock(*blockchain[index]);
     }
     catch (const std::exception &e)
     {
@@ -88,7 +92,8 @@ void Blockchain::deleteBlockID(int id)
     {
         if (blockchain[i]->getID() == id)
         {
-            blockchain[i - 1]->setNextBlock(blockchain[i + 1]);
+            blockchain[i - 1]->setNextBlock(*(blockchain[i + 1]));
+            (blockchain[i + 1])->setPreviousBlock(*blockchain[i - 1]);
             blockchain.erase(blockchain.begin() + i);
         }
     }
@@ -98,8 +103,9 @@ void Blockchain::deleteBlockAt(int index)
 {
     if (blockchain.size() > index)
     {
-        blockchain[i - 1]->setNextBlock(blockchain[i + 1]);
-        blockchain.erase(blockchain.begin() + 5);
+        blockchain[index - 1]->setNextBlock(*(blockchain[index + 1]));
+        (blockchain[index + 1])->setPreviousBlock(*blockchain[index - 1]);
+        blockchain.erase(blockchain.begin() + index);
     }
     else
     {
@@ -107,7 +113,7 @@ void Blockchain::deleteBlockAt(int index)
     }
 };
 
-int Blockchain::printBlockChain() const
+void Blockchain::printBlockChain() const
 {
     std::cout << "----------------Blockchain starts----------------" << std::endl;
     for (int i = 0; i < blockchain.size(); i++)
@@ -116,7 +122,7 @@ int Blockchain::printBlockChain() const
     }
     std::cout << "----------------Blockchain ends----------------" << std::endl;
 };
-int Blockchain::printBlockChain(int index) const
+void Blockchain::printBlockChain(int index) const
 {
     std::cout << "----------------Blockchain starts----------------" << std::endl;
     for (int i = 0; i < index; i++)
@@ -126,4 +132,4 @@ int Blockchain::printBlockChain(int index) const
     std::cout << "----------------Blockchain Uo to index ends----------------" << std::endl;
 };
 
-#endif BLOCKCHAIN.HPP
+#endif

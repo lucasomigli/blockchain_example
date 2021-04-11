@@ -8,4 +8,4 @@
 #include <stdexcept>
 #include <cmath>
 
-#endif COMMON_H
+#endif
