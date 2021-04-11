@@ -10,13 +10,14 @@ private:
     std::vector<std::shared_ptr<Block>> blockchain;
 
 public:
-    Blockchain(const int &val);
+    Blockchain();
     ~Blockchain(){};
 
     int getSize() const;
 
     int getLatestBlockID() const;
     int getLatestBlockValue() const;
+    Block getGenesis() const;
     Block getLatestBlock() const;
     Block getBlockAt(int id) const;
 
@@ -29,9 +30,10 @@ public:
     void printBlockChain(int index) const;
 };
 
-Blockchain::Blockchain(const int &val)
+Blockchain::Blockchain()
 {
-    Block *genesis;
+    Block *genesis(new Block());
+    genesis->genesis = true;
     std::shared_ptr<Block> p(genesis);
     blockchain.push_back(p);
 };
@@ -46,6 +48,11 @@ int Blockchain::getLatestBlockID() const
 int Blockchain::getLatestBlockValue() const
 {
     return this->blockchain[getSize() - 1]->getValue();
+};
+
+Block Blockchain::getGenesis() const
+{
+    return *(blockchain[0]);
 };
 
 Block Blockchain::getLatestBlock() const
@@ -69,8 +76,11 @@ void Blockchain::pushBlock(Block &block)
 {
     Block latest = getLatestBlock();
     block.setPreviousBlock(latest);
+
     latest.setNextBlock(block);
-}
+    blockchain.push_back(std::make_shared<Block>(block));
+};
+
 void Blockchain::insertBlock(Block &block, int index)
 {
     try
